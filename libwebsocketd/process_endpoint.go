@@ -151,7 +151,6 @@ func (pe *ProcessEndpoint) process_binout() {
 		}
 
 		if n > 0 {
-			pe.log.Error("process", "Reading binary data... ")
 			var dataLength uint32
 			binary.Read(buf, binary.LittleEndian, &dataLength)
 			dataOut := make([]byte, dataLength+1, dataLength+1)
