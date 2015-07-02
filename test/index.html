@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Binary Socket Test</title>
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="app.js"></script>
+        <style>
+            textarea {
+                width: 100%;
+                height: 100px;
+            }
+            button {
+                float: right;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="sendData" style="width: 50%; float: left;">
+            <form>
+            <fieldset>
+              <legend>Send As Text</legend>
+              Data:<br />
+              <textarea id="sendTextData">Hello World</textarea>
+              <button id="sendTextButton">Send Data</button>
+            </fieldset>
+
+
+            <fieldset>
+              <legend>Send As Binary</legend>
+              Type: <input type="text" id="sendBinaryType" value="1" />(Insert number between 1 and 255)<br/>
+              Data:<br />
+              <textarea id="sendBinaryData">&$1!!o*ury</textarea>
+              <button id="sendBinaryButton">Send Data</button>
+            </fieldset>
+
+            </form>
+        </div>
+
+        <div id="getData" style="width: 50%; float: left;">
+            <form>
+            <fieldset>
+              <legend>Get As Text</legend>
+              Data:<br />
+              <textarea id="getTextData"></textarea>
+              <button id="getTextButton">Get Data</button>
+            </fieldset>
+
+            <fieldset>
+              <legend>Get As Binary</legend>
+              Data:<br />
+              <textarea id="getBinaryData"></textarea>
+              <button id="getBinaryButton">Get Data</button>
+            </fieldset>
+            </form>
+        </div>
+
+        Log:
+        <div id="log" style="clear: both; scroll: auto; border: 1px solid black; height: 400px;"></div>
+    </body>
+</html>
