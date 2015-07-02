@@ -47,7 +47,6 @@ func (we *WebSocketEndpoint) Send(msg string) bool {
 }
 
 func (we *WebSocketEndpoint) SendBinary(data []byte) bool {
-	we.log.Error("websocket", "Sending %s bytes", len(data))
 	err := websocket.Message.Send(we.ws, data)
 	if err != nil {
 		we.log.Trace("websocket", "Cannot send: %s", err)
@@ -85,7 +84,6 @@ func (we *WebSocketEndpoint) read_client() {
 				binary.BigEndian.PutUint32(dataOut, dataLength)
 				dataOut = append(dataOut, btype)
 				dataOut = append(dataOut, byteArray...)
-				we.log.Error("websocket", "Read binary data type: %d, length: %d, actual: %d", btype, dataLength, len(dataOut))
 				we.binOut <- dataOut
 			} else {
 				we.output <- msg[1:len(msg)]

@@ -162,7 +162,6 @@ func (pe *ProcessEndpoint) process_binout() {
 			}
 
 			if n2 > 0 {
-				pe.log.Error("process", "Writing %d Bytes to binOut", len(dataOut))
 				pe.binOut <- dataOut
 			}
 		}
