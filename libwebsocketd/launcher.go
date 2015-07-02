@@ -7,14 +7,25 @@ package libwebsocketd
 
 import (
 	"io"
+	"os"
 	"os/exec"
+	"sync"
 )
+
+type closeOnce struct {
+	*os.File
+
+	once sync.Once
+	err  error
+}
 
 type LaunchedProcess struct {
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
 	stderr io.ReadCloser
+	binin  *os.File
+	binout *os.File
 }
 
 func launchCmd(commandName string, commandArgs []string, env []string) (*LaunchedProcess, error) {
@@ -36,10 +47,23 @@ func launchCmd(commandName string, commandArgs []string, env []string) (*Launche
 		return nil, err
 	}
 
-	err = cmd.Start()
+	binin, pw, err := os.Pipe()
 	if err != nil {
 		return nil, err
 	}
 
-	return &LaunchedProcess{cmd, stdin, stdout, stderr}, err
+	pr, binout, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.ExtraFiles = []*os.File{pr, pw}
+
+	err = cmd.Start()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &LaunchedProcess{cmd, stdin, stdout, stderr, binin, binout}, err
 }
