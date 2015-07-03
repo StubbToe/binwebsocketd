@@ -144,24 +144,35 @@ func (pe *ProcessEndpoint) process_binout() {
 
 	for {
 		n, err := pe.binBufIn.Read(lenb)
-		buf := bytes.NewBuffer(lenb)
 		if err != nil {
 			pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err)
 			return
 		}
+		buf := bytes.NewBuffer(lenb)
 
 		if n > 0 {
 			var dataLength uint32
 			binary.Read(buf, binary.LittleEndian, &dataLength)
-			dataOut := make([]byte, dataLength+1, dataLength+1)
+
+			//Peek at the data to catch errors
+			i, peekErr := pe.binBufIn.Peek(int(dataLength + 1))
+			if peekErr != nil {
+				pe.log.Error("process", "Unable to read %d bytes: %s", dataLength, peekErr)
+				break
+			}
+
+			dataOut := make([]byte, len(i), len(i))
 			n2, err2 := pe.binBufIn.Read(dataOut)
 			if err2 != nil {
 				pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err2)
-				return
+				break
 			}
 
-			if n2 > 0 {
+			if n2 == int(dataLength+1) {
 				pe.binOut <- dataOut
+			} else {
+				pe.log.Error("process", "Size of data [%d] does not match header size of: %d", n2, dataLength+1)
+				break
 			}
 		}
 	}
