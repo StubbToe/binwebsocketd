@@ -77,7 +77,7 @@ func (wsh *WebsocketdHandler) accept(ws *websocket.Conn, log *LogScope) {
 
 	log.Associate("pid", strconv.Itoa(launched.cmd.Process.Pid))
 
-	process := NewProcessEndpoint(launched, log)
+	process := NewProcessEndpoint(launched, log, wsh.server.Config.BfsLim)
 	wsEndpoint := NewWebSocketEndpoint(ws, log)
 
 	PipeEndpoints(process, wsEndpoint)

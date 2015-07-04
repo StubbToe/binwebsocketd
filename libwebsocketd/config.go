@@ -29,6 +29,7 @@ type Config struct {
 	Headers        []string
 	HeadersWs      []string
 	HeadersHTTP    []string
+	BfsLim         int
 
 	// created environment
 	Env       []string // Additional environment variables to pass to process ("key=value").

@@ -22,9 +22,10 @@ type ProcessEndpoint struct {
 	output     chan string
 	binOut     chan []byte
 	log        *LogScope
+	BfsLim     int
 }
 
-func NewProcessEndpoint(process *LaunchedProcess, log *LogScope) *ProcessEndpoint {
+func NewProcessEndpoint(process *LaunchedProcess, log *LogScope, bfsLim int) *ProcessEndpoint {
 	return &ProcessEndpoint{
 		process:    process,
 		bufferedIn: bufio.NewWriter(process.stdin),
@@ -32,7 +33,8 @@ func NewProcessEndpoint(process *LaunchedProcess, log *LogScope) *ProcessEndpoin
 		binBufOut:  bufio.NewWriter(process.binout),
 		output:     make(chan string),
 		binOut:     make(chan []byte),
-		log:        log}
+		log:        log,
+		BfsLim:     bfsLim}
 }
 
 func (pe *ProcessEndpoint) Terminate() {
@@ -154,24 +156,33 @@ func (pe *ProcessEndpoint) process_binout() {
 			var dataLength uint32
 			binary.Read(buf, binary.LittleEndian, &dataLength)
 
-			//Peek at the data to catch errors
-			i, peekErr := pe.binBufIn.Peek(int(dataLength + 1))
-			if peekErr != nil {
-				pe.log.Error("process", "Unable to read %d bytes: %s", dataLength, peekErr)
+			if dataLength > uint32(pe.BfsLim) {
+				pe.log.Error("process", "File size too large (%d bytes)", dataLength)
 				break
 			}
 
-			dataOut := make([]byte, len(i), len(i))
-			n2, err2 := pe.binBufIn.Read(dataOut)
-			if err2 != nil {
-				pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err2)
-				break
+			bytesRead := 0
+			dataOut := make([]byte, 0, 0)
+			buf2 := make([]byte, 4092, 4092)
+			for {
+				n2, err2 := pe.binBufIn.Read(buf2)
+				if err2 != nil {
+					pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err2)
+					break
+				}
+
+				bytesRead += n2
+				dataOut = append(dataOut, buf2[0:n2]...)
+
+				if bytesRead == int(dataLength+1) {
+					break
+				}
 			}
 
-			if n2 == int(dataLength+1) {
+			if bytesRead == int(dataLength+1) {
 				pe.binOut <- dataOut
 			} else {
-				pe.log.Error("process", "Size of data [%d] does not match header size of: %d", n2, dataLength+1)
+				pe.log.Error("process", "Size of data [%d] does not match header size of: %d", bytesRead, dataLength+1)
 				break
 			}
 		}

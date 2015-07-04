@@ -71,6 +71,7 @@ func parseCommandLine() *Config {
 	sslCert := flag.String("sslcert", "", "Should point to certificate PEM file when --ssl is used")
 	sslKey := flag.String("sslkey", "", "Should point to certificate private key file when --ssl is used")
 	maxForksFlag := flag.Int("maxforks", 0, "Max forks, zero means unlimited")
+	bfsLim := flag.Int("bfslim", 1000000, "Max binary file size")
 
 	// lib config options
 	reverseLookupFlag := flag.Bool("reverselookup", true, "Perform reverse DNS lookups on remote clients")
@@ -137,6 +138,7 @@ func parseCommandLine() *Config {
 	config.DevConsole = *devConsoleFlag
 	config.StartupTime = time.Now()
 	config.ServerSoftware = fmt.Sprintf("websocketd/%s", Version())
+	config.BfsLim = *bfsLim * 1000000
 
 	if len(os.Args) == 1 {
 		fmt.Printf("Command line arguments are missing.\n")
