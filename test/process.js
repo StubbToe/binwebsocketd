@@ -50,6 +50,11 @@ bin.on('data', function(data) {
         hexPairs[i] = byteToHex(data[i].charCodeAt(0));
     }
     process.stdout.write("binary received: " + hexPairs.join(" ") + "\n" );
+    
+
+    var buf = new Buffer(data.length);
+    buf.write(data, 0, 'binary');
+    bout.write(buf, 'binary');
 });
 
 bin.on('error', function(e) {

@@ -81,7 +81,7 @@ func (we *WebSocketEndpoint) read_client() {
 
 				dataLength := uint32(len(byteArray))
 				dataOut := make([]byte, 4)
-				binary.BigEndian.PutUint32(dataOut, dataLength)
+				binary.LittleEndian.PutUint32(dataOut, dataLength)
 				dataOut = append(dataOut, btype)
 				dataOut = append(dataOut, byteArray...)
 				we.binOut <- dataOut
