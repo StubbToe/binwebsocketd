@@ -55,7 +55,16 @@ function readText(data) {
 };
 
 function sendBinary(ws, type, data) {
-    ws.send(String.fromCharCode(type) + data);
+    var buffer = new ArrayBuffer(data.length+1);
+    var typeData = new Uint32Array(buffer, 0, 1);
+    var binData = new Uint8Array(buffer, 1, data.length);
+
+    typeData[0] = type;
+    var hexBytes = data.split(' ');
+    for (i = 0; i < hexBytes.length; i++) {
+        binData[i] = parseInt(hexBytes[i], 16);
+    }
+    ws.send(buffer);
 };
 
 function sendText(ws, data) {
