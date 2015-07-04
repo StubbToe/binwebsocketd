@@ -148,7 +148,7 @@ func (pe *ProcessEndpoint) process_binout() {
 		n, err := io.ReadFull(pe.binBufIn, lenb)
 		if err != nil {
 			pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err)
-			return
+			break
 		}
 		buf := bytes.NewBuffer(lenb)
 
