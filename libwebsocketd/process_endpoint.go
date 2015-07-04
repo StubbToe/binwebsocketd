@@ -145,7 +145,7 @@ func (pe *ProcessEndpoint) process_binout() {
 	lenb := make([]byte, 4, 4)
 
 	for {
-		n, err := pe.binBufIn.Read(lenb)
+		n, err := io.ReadFull(pe.binBufIn, lenb)
 		if err != nil {
 			pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err)
 			return
@@ -161,28 +161,17 @@ func (pe *ProcessEndpoint) process_binout() {
 				break
 			}
 
-			bytesRead := 0
-			dataOut := make([]byte, 0, 0)
-			buf2 := make([]byte, 4092, 4092)
-			for {
-				n2, err2 := pe.binBufIn.Read(buf2)
-				if err2 != nil {
-					pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err2)
-					break
-				}
-
-				bytesRead += n2
-				dataOut = append(dataOut, buf2[0:n2]...)
-
-				if bytesRead == int(dataLength+1) {
-					break
-				}
+			dataOut := make([]byte, int(dataLength+1), int(dataLength+1))
+			n2, err2 := io.ReadFull(pe.binBufIn, dataOut)
+			if err2 != nil {
+				pe.log.Error("process", "Unexpected error while reading BINOUT from process: %s", err2)
+				break
 			}
 
-			if bytesRead == int(dataLength+1) {
+			if n2 == int(dataLength+1) {
 				pe.binOut <- dataOut
 			} else {
-				pe.log.Error("process", "Size of data [%d] does not match header size of: %d", bytesRead, dataLength+1)
+				pe.log.Error("process", "Size of data [%d] does not match header size of: %d", n2, dataLength+1)
 				break
 			}
 		}
