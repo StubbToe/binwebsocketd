@@ -8,7 +8,7 @@ function log(msg) {
     $('#log').append('<div>' + msg + '</div>');
 }
 
-var ws = new WebSocket('ws://pounce.house:8080/');
+var ws = new WebSocket('ws://localhost:8000/process.js');
 ws.onopen = function() {
     log('CONNECT');
 };
@@ -16,7 +16,9 @@ ws.onclose = function() {
     log('DISCONNECT');
 };
 ws.onmessage = function(event) {
-    var b = toBytes(event.data);
+    var s = event.data;
+    var b = toBytes(s);
+    log('GOT: '+typeof(event.data));//+' '+event.data.charCodeAt(0));
 
     if (b[0] == 0) {
         readText(event.data.substr(1));
@@ -55,16 +57,7 @@ function readText(data) {
 };
 
 function sendBinary(ws, type, data) {
-    var buffer = new ArrayBuffer(data.length+1);
-    var typeData = new Uint32Array(buffer, 0, 1);
-    var binData = new Uint8Array(buffer, 1, data.length);
-
-    typeData[0] = type;
-    var hexBytes = data.split(' ');
-    for (i = 0; i < hexBytes.length; i++) {
-        binData[i] = parseInt(hexBytes[i], 16);
-    }
-    ws.send(buffer);
+    ws.send(String.fromCharCode(type) + data);
 };
 
 function sendText(ws, data) {

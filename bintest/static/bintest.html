@@ -1,0 +1,177 @@
+<html>
+<head>
+<title>BinWebsocketd test</title>
+<style>
+.wrapper {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  flex-flow: column nowrap;
+  flex-grow: 1;
+}
+.main {
+  flex: 3 100%;
+  position: relative;
+  margin-top: 5px;
+}
+textarea {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+}
+</style>
+</head>
+
+<body onload="init()" >
+
+  <canvas id="canvas" width="512" height="256"></canvas>
+  <br />
+
+  <button type="button" onclick="sendtext();">send text message</button>
+  <button type="button" onclick="sendbinary();">send binary message</button>
+
+  <br />
+  Output
+  <br />
+  <div class="main">
+    <!-- <textarea id="log" readonly ></textarea> -->
+    <textarea id="log" readonly style="max-height:512px;min-height:420px;resize:none"></textarea>
+  </div>
+
+<script>
+
+//globals to make testing easy
+var testurl="ws://localhost:8000/testscript";
+var ctx=null;
+var ws=null;
+var wsstart=false;
+
+// helper function: log message to screen
+function log(msg) {
+    var textarea = document.getElementById('log');
+    textarea.textContent += msg + '\n';
+    textarea.scrollTop = textarea.scrollHeight;
+}
+
+function str2ab(s) {
+    var buf = new ArrayBuffer(s.length); 
+    var bufView = new Uint8Array(buf);
+    for (var i=0, strLen=s.length; i<strLen; i++) {
+        bufView[i] = s.charCodeAt(i);
+    }
+    return bufView;
+}
+function ab2str(ab) {
+    if(ab.length<1024) {
+        return String.fromCharCode.apply(null,ab);
+    }
+    var s="";
+    for (var i = 0; i < ab.length; i++) {
+        s += String.fromCharCode(ab[i]);
+    }
+    return s;
+}
+
+// ran after body is loaded
+function init() {
+    ctx=document.getElementById('canvas').getContext("2d");
+
+    //TODO: not sure what all I need to do for a binary websocket
+    // setup websocket with callbacks
+    ws = new WebSocket(testurl);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = function() {
+        log('websocket open');
+        wsstart=true;
+    };
+    ws.onclose = function(){
+        if(!wsstart){
+            log('ERR: there appears to be connection issues');
+        }
+        log('websocket closed');
+        ws=null;
+    };
+    ws.onmessage = function(event){
+        var data=null;
+        var dataArr=null;
+        if (typeof(event.data)=='object'){
+            log("got "+typeof(event.data)+" "+event.data);
+        } else {
+            log("got "+typeof(event.data));
+        }
+
+        if (typeof(event.data)=='string'){
+            var rawstr=event.data;
+            var type=rawstr.charCodeAt(0);
+            data=rawstr.substr(1);
+            var len=data.length;
+        } else {
+            // arraybuffer
+            var rawdata=new Uint8Array(event.data);
+            var type=rawdata[0];
+            dataArr=rawdata.subarray(1);
+            var len=dataArr.length;
+        }
+        log("Type:" + type + " Length:" + len);
+
+        // get type
+        if(type==0) {
+            if(data==null) { 
+                data=ab2str(dataArr); 
+            }
+            log(data);
+        } else if(type==127) {
+            if(dataArr==null) {
+                dataArr=str2ab(data);
+            }
+
+            //for testing, treat as png image
+            var blob = new Blob([dataArr], {'type': 'image/png'});
+            var img = new Image();
+            img.onload = function(e) {
+                // Draw onto the canvas
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = URL.createObjectURL(blob);
+        } else {
+            // default
+            if(data==null) {
+                data=ab2str(dataArr);
+            }
+            log("bin_message:"+data);
+        }
+    };
+
+    log("init complete");
+}
+
+function sendtext() {
+    if(ws==null) {
+        log("ERR: websocket not connected");
+    } else {
+        //TODO: do I need to do anything special for binary websockets?
+        //send text line test
+        ws.send("\x00From Browser");
+    }
+}
+
+function sendbinary() {
+    if(ws==null) {
+        log("ERR: websocket not connected");
+    } else {
+        //TODO: do I need to do anything special for binary websockets?
+        //send binary test
+        ws.send("\x11Binary message");
+    }
+}
+
+</script>
+
+</body>
+</html>
+

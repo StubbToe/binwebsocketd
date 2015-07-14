@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/nodejs
 var binin = 3
 var binout = 4;
 var fs = require('fs');
@@ -31,7 +31,7 @@ process.stdin.on('data', function(data) {
         process.stdout.write('Hello World, from the Server\n');
         return;
     } else if (data == "sendBinary") {
-        fs.readFile('./test/img.png', 'binary', function(err, str) {
+        fs.readFile('./static/img.png', 'binary', function(err, str) {
             var buf = new Buffer(str.length + 5);
             buf.writeUInt32LE(str.length, 0);
             buf.write("\x01", 4);

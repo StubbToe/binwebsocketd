@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+import os
+import struct
+import sys
+import time
+
+def sleep(t):
+    # Turn this on to watch messages slowly for debugging
+    if 0:
+        time.sleep(t)
+
+# because stdlib usually buffers when redirected to pipe
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+# test sending simple line of test to stdout
+print "Hello World"
+
+# test line buffering of stdout text
+sys.stdout.write("Wait for ")
+sleep(2)
+sys.stdout.write("end of line\n")
+
+# test stderr  (shouldn't be sent across to browser)
+sys.stderr.write("This is for stderr\n")
+sleep(10)
+
+# test binary message
+#   length = 6
+#   type = 1
+#   data = "Type1\n"
+data = "Type1\n"
+os.write(4, struct.pack("<IB",len(data),1)+data)
+
+# test binary message a png
+#   length = ????
+#   type = 127
+#   data = img.png
+data = open("./static/img.png","rb").read()
+os.write(4, struct.pack("<IB",len(data),127)+data)
+sleep(10)
+
+data = open("./static/evilmonkey.png","rb").read()
+os.write(4, struct.pack("<IB",len(data),127)+data)
+sleep(10)
+
+# turn up binary message size limit to test this larger image
+#data = open("./static/monster.png","rb").read()
+#os.write(4, struct.pack("<IB",len(data),127)+data)
+#leep(10)
+
+
+# helper func
+def readall(fd,length):
+    dat = ""
+    remaining=length
+    while remaining:
+        newdat = os.read(fd,remaining)
+        remaining -= len(newdat)
+        if len(newdat)==0:
+            raise Exception("Unexpected fd %d closed"%fd)
+        dat+=newdat
+    return dat
+
+while True:
+    # test receiving text
+    line = sys.stdin.readline()
+    print "Got Text: %s"%(repr(line))
+    
+    # test receiving binary data
+    mlen, mtype = struct.unpack("<IB",readall(3,5))
+    print "Server got bin message, type:%d len:%d"%(mtype,mlen)
+    data = readall(3,mlen)
+    print "Got bin message, type:%d data:%s"%(mtype,repr(data))
+
