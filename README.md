@@ -1,4 +1,4 @@
-websocketd
+binwebsocketd
 ==========
 
 MODIFICATION:
@@ -9,7 +9,7 @@ From the launched program's point of view, stdin/stdout work as before.  Now
 it is also possible to read binary messages on fd=3, and write binary messages
 on fd=4.  To indicate where the binary messages end, the format is:
 
-> 5 byte header: 4 byte data length (little endian), 1 byte "type"
+> 5 byte header: 4 byte data length (little endian), 1 byte "type"  
 > variable length data: raw bytes (number specified by length)
 
 
@@ -21,7 +21,7 @@ Messages from stdout will be of type 0.  Messages sent with type 0 will go to
 stdin.  All other types will be treated as binary messages.
 
 
-Original
+original websocketd
 --------
 
 `websocketd` is a small command-line tool that will wrap an existing command-line interface program, and allow it to be accessed via a WebSocket.
