@@ -1,6 +1,30 @@
 websocketd
 ==========
 
+MODIFICATION
+------------
+
+This is a fork of websocketd. Changes are as follows:
+
+From the launched program's point of view, stdin/stdout work as before.  Now 
+it is also possible to read binary messages on fd=3, and write binary messages
+on fd=4.  To indicate where the binary messages end, the format is
+
+5 byte header: 4 byte data length (little endian), 1 byte "type"
+variable length data: raw bytes (number specified by length)
+
+
+From the browser's point of view, all messages now have the format:
+
+1 byte type, variable length data
+
+Messages from stdout will be of type 0.  Messages sent with type 0 will go to
+stdin.  All other types will be treated as binary messages.
+
+
+Original
+--------
+
 `websocketd` is a small command-line tool that will wrap an existing command-line interface program, and allow it to be accessed via a WebSocket.
 
 WebSocket-capable applications can now be built very easily. As long as you can write an executable program that reads `STDIN` and writes to `STDOUT`, you can build a WebSocket server. Do it in Python, Ruby, Perl, Bash, .NET, C, Go, PHP, Java, Clojure, Scala, Groovy, Expect, Awk, VBScript, Haskell, Lua, R, whatever! No networking libraries necessary.
