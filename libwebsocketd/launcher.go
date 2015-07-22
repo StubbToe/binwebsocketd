@@ -65,5 +65,9 @@ func launchCmd(commandName string, commandArgs []string, env []string) (*Launche
 		return nil, err
 	}
 
+	// get rid of extra handles
+	pr.Close()
+	pw.Close()
+
 	return &LaunchedProcess{cmd, stdin, stdout, stderr, binin, binout}, err
 }
